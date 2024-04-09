@@ -78,6 +78,8 @@ class SparkJDBCDataset(AbstractDataset[DataFrame, DataFrame]):
         load_args: dict[str, Any] = None,
         save_args: dict[str, Any] = None,
         metadata: dict[str, Any] = None,
+        query: str = None
+
     ) -> None:
         """Creates a new ``SparkJDBCDataset``.
 
@@ -112,15 +114,22 @@ class SparkJDBCDataset(AbstractDataset[DataFrame, DataFrame]):
                 "'jdbc:subprotocol:subname'."
             )
 
-        if not table:
+        if not table and not query:
             raise DatasetError(
-                "'table' argument cannot be empty. Please "
+                "'table'  and 'query' argument cannot be both empty. Please "
                 "provide the name of the table to load or save "
                 "data to."
             )
 
+        if  table and  query:
+            raise DatasetError(
+                "Only one of 'table'  and 'query' argument should be used. Please "
+                "provide the name of the table or a query."
+            )
+
         self._url = url
         self._table = table
+        self._query = query
 
         self.metadata = metadata
 
@@ -171,7 +180,11 @@ class SparkJDBCDataset(AbstractDataset[DataFrame, DataFrame]):
         }
 
     def _load(self) -> DataFrame:
-        return _get_spark().read.jdbc(self._url, self._table, **self._load_args)
+        if self._table:
+            return _get_spark().read.jdbc(self._url, self._table, **self._load_args)
+        if self._query:
+            return _get_spark().read.format("jdbc").option("url", self._url).option("query", self._query).load()
+
 
     def _save(self, data: DataFrame) -> None:
         return data.write.jdbc(self._url, self._table, **self._save_args)
