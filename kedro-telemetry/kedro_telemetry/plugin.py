@@ -43,6 +43,7 @@ KNOWN_CI_ENV_VAR_KEYS = {
     "TRAVIS",  # https://docs.travis-ci.com/user/environment-variables/#default-environment-variables
     "BUILDKITE",  # https://buildkite.com/docs/pipelines/environment-variables
 }
+_SKIP_TELEMETRY_ENV_VAR_KEYS = {"DO_NOT_TRACK", "KEDRO_DISABLE_TELEMETRY"}
 TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 CONFIG_FILENAME = "telemetry.toml"
 PYPROJECT_CONFIG_NAME = "pyproject.toml"
@@ -336,6 +337,10 @@ def _send_heap_event(
 
 def _check_for_telemetry_consent(project_path: Path) -> bool:
     telemetry_file_path = project_path / ".telemetry"
+    for env_var in _SKIP_TELEMETRY_ENV_VAR_KEYS:
+        if os.environ.get(env_var):
+            return False
+
     if not telemetry_file_path.exists():
         return _confirm_consent(telemetry_file_path)
     with open(telemetry_file_path, encoding="utf-8") as telemetry_file:
