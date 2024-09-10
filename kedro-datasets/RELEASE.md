@@ -16,6 +16,8 @@
 * Refactored all datasets to set `fs_args` defaults in the same way as `load_args` and `save_args` and not have hardcoded values in the save methods.
 
 ## Breaking Changes
+* Exposed `load` and `save` publicly for each dataset. This requires Kedro version 0.19.7 or higher.
+
 ## Community contributions
 Many thanks to the following Kedroids for contributing PRs to this release:
 * [Brandon Meek](https://github.com/bpmeek)
